@@ -141,10 +141,10 @@ body {
 /* -------------------- Shivani.png cake topper -------------------- */
 #cakeIntro .shivani-img {
     position: absolute;
-    top: 40%;
+    top: 35%;
     left: 50%;
-    width: clamp(80px, 30vw, 120px);
-    height: clamp(200px, 28vw, 200px);
+    width: clamp(80px, 45vw, 120px);
+    height: clamp(270px, 28vw, 200px);
     object-fit: cover;
 
     /* Rectangle */
@@ -164,6 +164,58 @@ body {
 #cakeIntro.show-photo .shivani-img {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
+}
+
+/* -------------------- Photo slide-left transition --------------------
+   JS switches the photo to position:fixed at its current on-screen
+   center (no visual jump), then this class animates it smoothly
+   across the viewport over to the left side. */
+#cakeIntro .shivani-img.slide-left-active {
+    transition: left 1s cubic-bezier(.65, 0, .35, 1), top 1s ease;
+    z-index: 5;
+}
+
+/* -------------------- "HAPPY BIRTHDAY PANGU" text (right side) -------------------- */
+#cakeIntro .hbday-text-wrap {
+    position: fixed;
+    top: 30%;
+    right: 26vw;
+    transform: translateY(-50%);
+    z-index: 6;
+    max-width: 46vw;
+    text-align: right;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+}
+
+#cakeIntro.show-text .hbday-text-wrap {
+    opacity: 1;
+}
+
+#cakeIntro .hbday-text {
+    font-family: "Roboto", sans-serif;
+    font-weight: 700;
+    color: #ff1744;
+    font-size: clamp(1.7rem, 5.5vw, 3.2rem);
+    line-height: 1.25;
+    text-shadow: 0 0 14px rgba(255, 23, 68, 0.4), 0 3px 6px rgba(0, 0, 0, 0.18);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+#cakeIntro .hbday-text .cursor {
+    display: inline-block;
+    margin-left: 2px;
+    animation: hbdayCursorBlink 0.85s steps(1) infinite;
+}
+
+#cakeIntro.text-done .hbday-text .cursor {
+    display: none;
+}
+
+@keyframes hbdayCursorBlink {
+    50% { opacity: 0; }
 }
 
 /* -------------------- Fireworks -------------------- */
