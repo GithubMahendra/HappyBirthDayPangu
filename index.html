@@ -232,6 +232,9 @@
         </svg>
         <img id="shivaniPhoto" class="shivani-img" src="./images/Shivani.png" alt="Shivani">
         </div>
+        <div class="hbday-text-wrap" id="hbdayTextWrap">
+            <h2 class="hbday-text"><span id="hbdayTyped"></span><span class="cursor">|</span></h2>
+        </div>
         <div class="cake-text">
             <h1>happy birthday!</h1>
             <p>for Shivani 💖</p>
@@ -397,14 +400,20 @@
     //
     // Timeline:
     //   1. Cake bakes + candle/flame light up (CSS/SMIL, already running)
-    //   2. Shivani.png fades in on top of the cake
-    //   3. 2s pause
-    //   4. Party lights gradually fade in
-    //   5. Fireworks burst from the lights for 3s
-    //   6. Navigate to the birthday site
+    //   2. Shivani.png fades/scales in on top of the cake
+    //   3. Shivani.png smoothly slides across to the left side
+    //   4. "HAPPY BIRTHDAY PANGU" types itself out in red on the right
+    //   5. Party lights gradually fade in
+    //   6. Fireworks burst from the lights for 3s
+    //   7. Celebration complete -> reveal the birthday site
     var CAKE_COMPLETE_MS = 6800;   // cake fully baked, candle lit
     var PHOTO_APPEAR_MS = 700;     // time for Shivani.png to fade/scale in
-    var PAUSE_AFTER_PHOTO_MS = 2000;
+    var SETTLE_AFTER_PHOTO_MS = 500;  // brief pause before the slide starts
+    var SLIDE_MS = 1000;           // duration of the slide-to-left animation
+    var GAP_AFTER_SLIDE_MS = 300;  // brief pause before the text starts typing
+    var HBDAY_TEXT = 'HAPPY BIRTHDAY PANGU';
+    var TYPE_INTERVAL_MS = 90;     // per-character typing speed
+    var PAUSE_AFTER_TEXT_MS = 1500; // pause after typing finishes before the lights
     var FIREWORKS_MS = 3000;       // lights fade in + fireworks burst window
     var FADE_OUT_MS = 1000;        // matches the CSS fade transition on #cakeIntro
 
@@ -476,6 +485,54 @@
         }, 900);
     }
 
+    function slideImageLeft() {
+        var img = document.getElementById('shivaniPhoto');
+        if (!img) return;
+
+        // Freeze the photo at its current on-screen center using
+        // position:fixed, so switching off the cake's local layout
+        // causes zero visual jump.
+        var rect = img.getBoundingClientRect();
+        var centerX = rect.left + rect.width / 2;
+        var centerY = rect.top + rect.height / 2;
+
+        img.style.position = 'fixed';
+        img.style.margin = '0';
+        img.style.top = centerY + 'px';
+        img.style.left = centerX + 'px';
+
+        // Force a reflow so the browser registers the frozen position
+        // before we enable the transition and change the target.
+        void img.offsetWidth;
+
+        img.classList.add('slide-left-active');
+
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                img.style.left = '25vw';
+                img.style.top = centerY + 'px';
+            });
+        });
+    }
+
+    function typeHbdayText() {
+        if (introEl) introEl.classList.add('show-text');
+        var typedEl = document.getElementById('hbdayTyped');
+        if (!typedEl) return;
+        var chars = HBDAY_TEXT.split('');
+        var i = 0;
+        var typer = setInterval(function () {
+            if (i < chars.length) {
+                typedEl.textContent += chars[i];
+                i++;
+            } else {
+                clearInterval(typer);
+                if (introEl) introEl.classList.add('text-done');
+            }
+        }, TYPE_INTERVAL_MS);
+        pendingTimers.push(typer);
+    }
+
     function endIntro() {
         if (!introEl || introEl.classList.contains('fade-out')) return; // already ending
         introEl.classList.add('fade-out');
@@ -500,8 +557,21 @@
             if (introEl) introEl.classList.add('show-photo');
         }, CAKE_COMPLETE_MS);
 
-        // Step: after the photo has appeared + a 2s pause, light up + fireworks
-        var lightsStart = CAKE_COMPLETE_MS + PHOTO_APPEAR_MS + PAUSE_AFTER_PHOTO_MS;
+        // Step: once the photo has settled, slide it smoothly to the left
+        var slideStart = CAKE_COMPLETE_MS + PHOTO_APPEAR_MS + SETTLE_AFTER_PHOTO_MS;
+        schedule(function () {
+            slideImageLeft();
+        }, slideStart);
+
+        // Step: once the slide finishes, type out "HAPPY BIRTHDAY PANGU" on the right
+        var textStart = slideStart + SLIDE_MS + GAP_AFTER_SLIDE_MS;
+        schedule(function () {
+            typeHbdayText();
+        }, textStart);
+
+        // Step: once the text has finished typing + a pause, light up + fireworks
+        var typingDuration = HBDAY_TEXT.length * TYPE_INTERVAL_MS;
+        var lightsStart = textStart + typingDuration + PAUSE_AFTER_TEXT_MS;
         schedule(function () {
             if (introEl) introEl.classList.add('lit');
             spawnFirework();
